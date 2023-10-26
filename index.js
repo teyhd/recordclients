@@ -237,6 +237,7 @@ async function vkstart() {
         method: "GET",
         json: true,  
     }, async function (error, response, body){
+       // console.log(body);
         if (body==undefined){
             console.log('Ошибка получения логина');
             setTimeout(vkstart,2500)
