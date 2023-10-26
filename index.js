@@ -174,13 +174,15 @@ async function vk_upload(video_path) {
                 setTimeout(async ()=>{await vk_upload(video_path)},5000)
                 console.log(httpResponse);
                 console.log(body);
-              return mlog('upload failed:', err);
+                mlog('upload failed:', err);
             } else {
                 body = JSON.parse(body)
                 let vurl = ""
                 setTimeout(async ()=>{vurl = await getvideourl (inf('group_id'),body.video_id)},5000)
                
             }
+            mlog('Ошибка загрузки видео')
+            mlog(video_path)
             mlog(body);
            
           });
