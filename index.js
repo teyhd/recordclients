@@ -126,6 +126,12 @@ app.get('/ok',async (req,res)=>{
     res.send("ok")
 })  
 
+app.get('/tovk',async (req,res)=>{
+    await vk_upload(req.query.url)
+    //console.log('ok');
+    res.send("ok")
+})  
+
 async function stop_record() {
     let t = await obs.call('StopRecord');
     mlog(t.outputPath)
