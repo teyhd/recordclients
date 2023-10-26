@@ -2,7 +2,7 @@ import {mlog,say} from './logs.js'
 process.on('uncaughtException', (err) => {
     mlog('Глобальный косяк приложения!!! ', err.stack);
     }); 
-let test = true
+let test = false
 let platurl = "api-dev" 
 platurl = "api" 
 
