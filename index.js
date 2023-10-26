@@ -129,8 +129,8 @@ app.get('/ok',async (req,res)=>{
 async function stop_record() {
     let t = await obs.call('StopRecord');
     mlog(t.outputPath)
-    setTimeout(async ()=>{await vk_upload(path.basename(t.outputPath))},1500)
-    setTimeout(async ()=>{await platon_upload(path.basename(t.outputPath))},3000)
+    setTimeout(async ()=>{await vk_upload(path.basename(t.outputPath))},5000)
+    setTimeout(async ()=>{await platon_upload(path.basename(t.outputPath))},7000)
     return t.outputPath
 }
 async function stop_stream() {
@@ -165,7 +165,7 @@ async function vk_upload(video_path) {
         
         request.post({url:url, formData},async function optionalCallback(err, httpResponse, body) {
             if (err) {
-                setTimeout(async ()=>{await vk_upload(video_path)},4000)
+                setTimeout(async ()=>{await vk_upload(video_path)},5000)
                 console.log(httpResponse);
                 console.log(body);
               return mlog('upload failed:', err);
