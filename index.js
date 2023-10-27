@@ -132,6 +132,20 @@ app.get('/tovk',async (req,res)=>{
     res.send("ok")
 })  
 
+app.get('/test',async (req,res)=>{
+    await obs.call('StartRecord');
+    let ans = "ok"
+    setTimeout(async ()=>{
+        mlog(await obs.call('GetRecordStatus'));
+        ans = await obs.call('GetRecordStatus');
+    },1000)
+    record_tmr = setTimeout(()=>{
+        record_tmr = 0
+        stop_record()
+    },45*60*1000)
+    res.send(ans)
+})  
+
 async function stop_record() {
     let t = await obs.call('StopRecord');
     mlog(t.outputPath)
