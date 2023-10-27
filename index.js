@@ -165,6 +165,7 @@ async function vk_upload(video_path) {
         group_id: inf('group_id')
       }).then(async (url) => {
         const formData = {
+           // video_file: fs.createReadStream(`./video/${video_path}`),
             video_file: fs.createReadStream(`./video/${video_path}`),
             timeout: 60000 * 5
         };
