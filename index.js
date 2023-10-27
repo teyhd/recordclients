@@ -139,8 +139,8 @@ app.get('/test',async (req,res)=>{
         mlog(await obs.call('GetRecordStatus'));
         ans = await obs.call('GetRecordStatus');
     },1000)
-    record_tmr = setTimeout(()=>{
-        record_tmr = 0
+     setTimeout(()=>{
+        
         stop_record()
     },45*60*1000)
     res.send(ans)
