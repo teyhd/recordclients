@@ -1,12 +1,10 @@
 import {mlog,say} from './logs.js'
 process.on('uncaughtException', (err) => {
     mlog('Глобальный косяк приложения!!! ', err.stack);
-    }); 
+    });
 let test = false
-let platurl = "api-dev" 
-platurl = "api" 
-
-import {inf,tinfo} from './info.js'
+let platurl = "api-dev"
+platurl = "api"
 
 import OBSWebSocket, {EventSubscription} from 'obs-websocket-js';
 import express from 'express'
@@ -17,7 +15,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import request from 'request';
 import { networkInterfaces } from 'os';
-
+import {inf} from './info.js'
 import urlencode from 'urlencode';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,8 +26,12 @@ const app = express();
 const obs = new OBSWebSocket();
 let conn = await obs.connect('ws://localhost:4455', inf('obspass'));
 
-var vk
-
+var vk = await easyvk({
+    username: inf('login'),
+    password: inf('pass'),
+    sessionFile: path.join(__dirname, '.my-session'),
+    utils: {uploader: true}
+  })
 var fullstat = []
 async function update_stat(){
     fullstat = [await obs.call('GetRecordStatus'), await obs.call('GetStreamStatus')]
@@ -66,7 +68,7 @@ app.get('/',async (req,res)=>{
                     record_tmr = 0
                     stop_record()
                 },45*60*1000)
-            }                  
+            }
             break;
         case 'stoprec':
             mlog("stoprec")
@@ -114,43 +116,17 @@ app.get('/',async (req,res)=>{
     }
     console.log(ans);
     res.json(ans)
-}) 
+})
 app.get('/dev',async (req,res)=>{
     console.log(req.query.url);
     platurl = req.query.url
     res.send(platurl)
-})  
-
-app.get('/ok',async (req,res)=>{
-    //console.log('ok');
-    res.send("ok")
-})  
-
-app.get('/tovk',async (req,res)=>{
-    await vk_upload(req.query.url)
-    //console.log('ok');
-    res.send("ok")
-})  
-
-app.get('/test',async (req,res)=>{
-    await obs.call('StartRecord');
-    let ans = "ok"
-    setTimeout(async ()=>{
-        mlog(await obs.call('GetRecordStatus'));
-        ans = await obs.call('GetRecordStatus');
-    },1000)
-     setTimeout(()=>{
-        
-        stop_record()
-    },45*60*1000)
-    res.send(ans)
-})  
-
+})
 async function stop_record() {
     let t = await obs.call('StopRecord');
     mlog(t.outputPath)
-    setTimeout(async ()=>{await vk_upload(path.basename(t.outputPath))},5000)
-    setTimeout(async ()=>{await platon_upload(path.basename(t.outputPath))},7000)
+    setTimeout(async ()=>{await vk_upload(path.basename(t.outputPath))},1500)
+    setTimeout(async ()=>{await platon_upload(path.basename(t.outputPath))},3000)
     return t.outputPath
 }
 async function stop_stream() {
@@ -164,7 +140,7 @@ async function stop_stream() {
             "Authorization": `Bearer ${access}`
           },
         method: "POST",
-        json: true,  
+        json: true,
         body: body
     },function (error, response, body) {
        // console.log(response.toJSON());
@@ -172,51 +148,42 @@ async function stop_stream() {
         mlog(body);
     })
 }
-
-//vk_upload("2023-10-25_17-03-43.mp4") 
 async function vk_upload(video_path) {
     vk.uploader.getUploadURL('video.save', {
         group_id: inf('group_id')
       }).then(async (url) => {
         const formData = {
-           // video_file: fs.createReadStream(`./video/${video_path}`),
             video_file: fs.createReadStream(`./video/${video_path}`),
-            timeout: 60000 * 5
         };
-        
+
         request.post({url:url, formData},async function optionalCallback(err, httpResponse, body) {
             if (err) {
-                setTimeout(async ()=>{await vk_upload(video_path)},5000)
-                console.log(httpResponse);
-                console.log(body);
-                mlog('upload failed:', err);
+              return mlog('upload failed:', err);
             } else {
                 body = JSON.parse(body)
                 let vurl = ""
-                setTimeout(async ()=>{vurl = await getvideourl (inf('group_id'),body.video_id)},5000)
-               
+                setTimeout(async ()=>{vurl = await getvideourl (inf('group_id'),body.video_id)},2000)
+
             }
-            mlog('Ошибка загрузки видео')
-            mlog(video_path)
             mlog(body);
-           
+
           });
-      }); 
+      });
 }
 async function platon_upload(video_path){
     const formData = {
         video_file: fs.createReadStream(`./video/${video_path}`),
     };
-    
-    request.post({url:"https://platon.teyhd.ru/upload", formData}, function optionalCallback(err, httpResponse, body) {
+
+    request.post({url:"https://example.invalid/upload", formData}, function optionalCallback(err, httpResponse, body) {
         if (err) {
           return mlog('upload failed:', err);
         }
         mlog(body);
         /*request({
-            url: `https://platon.teyhd.ru/addmat?url=${video_path}&token=1&vkhash=null`,
+            url: `https://example.invalid/addmat?url=${video_path}&token=1&vkhash=null`,
             method: "GET",
-           // json: true,  
+           // json: true,
         }, function (error, response, body){
             //console.log(response);
            // res.send(body)
@@ -224,7 +191,7 @@ async function platon_upload(video_path){
         });
        */
     });
-    
+
 }
 //getvideourl('222361696_456239096')
 //platon_upload("2023-09-26_10-57.mp4")
@@ -238,9 +205,9 @@ async function getvideourl (own,id) {
         setTimeout(getvideourl,1000,own,id)
     } else {
         request({
-            url: `https://platon.teyhd.ru/addmat?url=${urlencode(vid.items[0].player)}&access=${access}&course=${course}&less=${less}`,
+            url: `https://example.invalid/addmat?url=${urlencode(vid.items[0].player)}&access=${access}&course=${course}&less=${less}`,
             method: "GET",
-           // json: true,  
+           // json: true,
         }, function (error, response, body){
             //console.log(response);
            // res.send(body)
@@ -249,37 +216,8 @@ async function getvideourl (own,id) {
         return vid.items[0].player
     }
 }
-async function vkstart() {
-    let url = "https://platon.teyhd.ru"
-    if (test) {
-        url = "http://localhost:707"
-    }
-    request({
-        url: `${url}/info?token=hulgbsGrtfs4ETEwgs34`,
-        headers: {'Content-Type': 'application/json'},
-        method: "GET",
-        json: true,  
-    }, async function (error, response, body){
-       // console.log(body);
-        if (body==undefined){
-            console.log('Ошибка получения логина');
-            setTimeout(vkstart,2500)
-        } else {
-            tinfo.login=body.login
-            tinfo.pass=body.pass
-            tinfo.group_id=body.group_id
-            vk = await easyvk({
-                username: inf('login'),
-                password: inf('pass'),
-                sessionFile: path.join(__dirname, '.my-session'),
-                utils: {uploader: true}
-            })
-            await sendstart()
-        }
-        
-    })
 
-}
+
 async function start(){
     try {
         app.listen(PORT,()=> {
@@ -291,23 +229,23 @@ async function start(){
             message: `Клиент ${inf('kab')} - онлайн.`,
             random_id: easyvk.randomId()
         });*/
-        await vkstart()
+        await sendstart()
     } catch (e) {
         mlog(e);
     }
 }
 async function sendstart() {
-    let url = "https://platon.teyhd.ru"
+    let url = "https://example.invalid"
     if (test) {
         url = "http://localhost:707"
     }
     request({
-        //url: "platon.teyhd.ru:707",
-        //url: "https://platon.teyhd.ru:707",
+        //url: "example.invalid:707",
+        //url: "https://example.invalid:707",
         url: url+`/kabstart?kab=${inf('kab')}&online=1&host=${getmyip()}&stat=${JSON.stringify(await update_stat())}`,
         method: "GET",
         headers:{
-            'content-type': 'multipart/form-data', 
+            'content-type': 'multipart/form-data',
         },
     }, function (error, response, bodys){
        //console.log(error);
@@ -349,54 +287,16 @@ function getdate() {
 function curdate(num) {
     return num<10 ? '0'+num : num
 }
-setInterval(sendstart,1000*60*10)
+setInterval(sendstart,1000*60*30)
 mlog(getmyip());
 start();
 
-
-/*
-import { VK } from 'vk-io';
-
-const vks = new VK({
-    token: "vk1.a.q8bKD9bNgk40CuZQFgYlsnBRCGHw5npKXxNpa0Hi4zVt0jYRYmPz-i8sX3bh5O-9BuQ12jf0Xa1aKsa95LnNf0qR1r-FUykcWOu8lgIKAnTYJcORQeNpgVcbYuErP581PqbFBeEw3SzhOJKZM9aSyubntRy2a3ePSY00kpgkE5qiRDKCUFP3OZa71WmvRdw5TbDcIwvD1BmMbwYINf1Bxg"
-});
-
-//bigupload().catch(console.log);
-
-async function bigupload() {
-  let ans = await vks.upload.video({
-        group_id: inf('group_id'),
-        name: "name",
-        source: {
-            //timeout: 6000 * 5,
-            value: './video/2023-09-26_10-57.mp4'
-        }
-
-    });
-    console.log(ans);
-}*/
-/*
-const attachment = await vks.upload.video({
-    album_id: 0,
-    group_id: inf('group_id'),
-    name: "name",
-    description: "desc",
-    is_private: 0,
-    wallpost: 1,
-    no_comments: 0,
-    repeat: 0,
-    source: {
-        value: './video/2023-10-25_13-01-49.mp4'
-    }
-});
-console.log(attachment);
-*/
 /*
 let body =6
 request({
-    url: `http://platon.teyhd.ru:707/addmat?url=${body}&token=1&vkhash=null`,
+    url: `http://example.invalid:707/addmat?url=${body}&token=1&vkhash=null`,
     method: "GET",
-   // json: true,  
+   // json: true,
 }, function (error, response, body){
     //console.log(response);
     console.log(body);
@@ -412,14 +312,14 @@ async function ts() {
             console.log(data);
             // Ничего не делать
         });
-    });  
+    });
 }
 console.log(await ts());
 //
 */
 function killstream () {
-var mstreamid = 448397830121
-var accessq = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAzOTQyOTAxLCJpYXQiOjE2OTUzMDI5MDEsImp0aSI6IjU3YmE3OTlhZDYxNzQyOGY4ODlkMTFmZjRmNzAzMTE0IiwidXNlcl9pZCI6NH0.IWYCy0FGkhRoxMhDffLZZd7mu_qcdF9tEGZymc_Ha10`
+var mstreamid = Number(process.env.RECORDER_STREAM_ID || 0)
+var accessq = process.env.LEGACY_ACCESSQ
 let body = {end_date:getdate()}
 request({
     url: `https://${platurl}.platonics.ru/teacher/streams/`+mstreamid,
@@ -428,7 +328,7 @@ request({
         "Authorization": `Bearer ${accessq}`
       },
     method: "POST",
-    json: true,  
+    json: true,
     body: body
 },function (error, response, body) {
    // console.log(response.toJSON());
