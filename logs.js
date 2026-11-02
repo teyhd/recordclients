@@ -9,13 +9,13 @@ function curdate(minute){
     minute = (minute < 10) ? '0' + minute : minute;
     return minute;
   }
-  
+
 
 export function mlog (par) {
     let datecreate = new Date();
     let texta = `\n ${curdate(datecreate.getHours())}:${curdate(datecreate.getMinutes())}:${curdate(datecreate.getSeconds())}`;
     let obj = arguments;
-  
+
     for (const key in obj) {
       if (typeof obj[key]=='object') {
         for (const keys in obj[key]){
@@ -24,8 +24,8 @@ export function mlog (par) {
       } else {
         texta = `${texta} ${obj[key]}`
       }
-      
-    } 
+
+    }
     fs.writeFileSync(path.join('logs',`${curdate(datecreate.getDate())}.${curdate(datecreate.getMonth()+1)} log.txt`),
     texta,
     {
@@ -33,13 +33,13 @@ export function mlog (par) {
       flag: "a+",
       mode: 0o666
     });
-  
+
     console.log(texta);
     return texta
   }
 export function say(msg,all=false) {
-  var numb = ['79176334420']
-  var tgnum = [304622290]
+  var numb = (process.env.LEGACY_NUMB_RECIPIENTS || '').split(',').filter(Boolean)
+  var tgnum = (process.env.LEGACY_TGNUM_RECIPIENTS || '').split(',').filter(Boolean)
   if (all===true){
     numb.forEach(element => {
       setTimeout(() => send(element,msg), 1500);
@@ -50,7 +50,7 @@ export function say(msg,all=false) {
   } else{
     setTimeout(() => sendtg(tgnum[0],msg), 1500);
   }
-  
+
 }
 
 function sendtg(num,msg) {
@@ -66,5 +66,3 @@ function sendtg(num,msg) {
     //console.dir(err);
   });*/
 }
-
-
